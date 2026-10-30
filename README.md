@@ -1,4 +1,4 @@
-# SHiroyasha's portfolio
+# Shiroyasha's portfolio
 
 A static portfolio built with Astro. The stack diagram is a small React island; the rest of the site is rendered as HTML at build time. The SSO case study lives in `src/pages/work/sso-and-permissions.md` and can be edited as Markdown.
 
