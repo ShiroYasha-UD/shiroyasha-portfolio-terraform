@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SSO and permissions — case study</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;family=Noto+Serif+JP:wght@600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0D10}
+a{color:#7CC4FF;text-decoration:none}a:hover{color:#B5DDFF}
+</style>
+</helmet>
+<div style="background: #0B0D10; color: #E8EAED; font-family: 'Geist', system-ui, sans-serif; min-height: 100vh">
+<div style="max-width: 860px; margin: 0 auto; padding: 0 24px">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 28px 0">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 12px; font-family: 'Geist Mono', monospace; font-size: 16px; font-weight: 500; color: #E8EAED">
+<span style="width: 34px; height: 34px; border-radius: 8px; background: #161B22; border: 1px solid #262C34; display: inline-flex; align-items: center; justify-content: center; font-family: 'Noto Serif JP', serif; font-size: 18px; color: {{accent}}">白</span>
+<span>shiroyasha<span style="color: {{accent}}">_</span></span>
+</a>
+<a href="Main.dc.html" style="font-size: 15px; color: #C5CBD3">← Back</a>
+</header>
+
+<section style="padding: 72px 0 40px; display: flex; flex-direction: column; gap: 24px">
+<p style="margin: 0; font-family: 'Geist Mono', monospace; font-size: 13px; color: {{accent}}">login &amp; permissions</p>
+<h1 style="margin: 0; font-size: clamp(36px, 5vw, 56px); line-height: 1.08; letter-spacing: -0.03em; font-weight: 600">SSO and permissions, built as a junior</h1>
+<p style="margin: 0; font-size: 20px; line-height: 1.6; color: #B4BBC5">Our platform needed two things: a way to sign in with Google, and a better answer to "who's allowed to do what" than a handful of hard-coded roles. I got to build both.</p>
+<p style="margin: 0; font-family: 'Geist Mono', monospace; font-size: 14px; line-height: 1.7; color: #9AA3AE">junior dev on a team of 5 · Aug 2025 – Jan 2026 · Spring Boot, Spring Security, SAML</p>
+</section>
+
+<section aria-label="In numbers" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px">
+<div style="border: 1px solid #1E242C; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 8px"><span style="font-size: 40px; font-weight: 600; letter-spacing: -0.03em; color: {{accent}}">~150</span><span style="font-size: 15px; line-height: 1.5; color: #B4BBC5">permissions across 9 roles, and still growing</span></div>
+<div style="border: 1px solid #1E242C; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 8px"><span style="font-size: 40px; font-weight: 600; letter-spacing: -0.03em; color: {{accent}}">2 → 1</span><span style="font-size: 15px; line-height: 1.5; color: #B4BBC5">ways to log in, Google or password, but only one kind of session afterwards</span></div>
+</section>
+
+<section aria-labelledby="how-title" style="padding: 80px 0 0; display: flex; flex-direction: column; gap: 20px">
+<h2 id="how-title" style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.02em">How it works</h2>
+<figure style="margin: 0; border: 1px solid #1E242C; border-radius: 16px; background: #10141A; padding: 36px 28px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px">
+<div style="border: 1px solid #262C34; border-radius: 12px; padding: 14px 18px; min-width: 110px; text-align: center; font-weight: 600">You</div>
+<svg width="36" height="14" viewBox="0 0 36 14" fill="none" aria-hidden="true"><path d="M0 7h32M27 2l5 5-5 5" stroke="#4A5360" stroke-width="1.5"></path></svg>
+<div style="border: 1px solid {{accent}}; background: #16202B; border-radius: 12px; padding: 14px 18px; min-width: 150px; text-align: center; font-weight: 600">Auth service</div>
+<svg width="36" height="14" viewBox="0 0 36 14" fill="none" aria-hidden="true"><path d="M4 7h28M27 2l5 5-5 5M9 2L4 7l5 5" stroke="#4A5360" stroke-width="1.5"></path></svg>
+<div style="border: 1px solid #262C34; border-radius: 12px; padding: 14px 18px; min-width: 110px; text-align: center; font-weight: 600">Google</div>
+</div>
+<div style="display: flex; justify-content: center"><svg width="14" height="28" viewBox="0 0 14 28" fill="none" aria-hidden="true"><path d="M7 0v24M2 19l5 5 5-5" stroke="#4A5360" stroke-width="1.5"></path></svg></div>
+<div style="display: flex; justify-content: center"><div style="border: 1px solid #262C34; border-radius: 12px; padding: 14px 20px; min-width: 240px; text-align: center"><span style="display: block; font-weight: 600">One session + your permissions</span><span style="display: block; font-size: 13px; color: #9AA3AE; margin-top: 4px">every other service just reads this</span></div></div>
+<figcaption style="font-size: 15px; line-height: 1.6; color: #9AA3AE; text-align: center; max-width: 600px; margin: 0 auto">You log in once, with Google or a password. After that, every service sees the same user with the same permissions and doesn't care how you got in.</figcaption>
+</figure>
+</section>
+
+<section aria-labelledby="choices-title" style="padding: 80px 0 0; display: flex; flex-direction: column; gap: 28px">
+<h2 id="choices-title" style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.02em">Choices I made</h2>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<p style="margin: 0; font-size: 18px; font-weight: 600">Permissions, not just roles</p>
+<p style="margin: 0; font-size: 17px; line-height: 1.7; color: #C5CBD3">Every endpoint asks for its own permission, and roles like Operator, Driver and Admin are just bundles of them. So a new role means picking permissions, not touching controllers. And if someone needs one extra thing, like creating accounts without being an Admin, they can get exactly that one permission.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<p style="margin: 0; font-size: 18px; font-weight: 600">A Google user is just a user</p>
+<p style="margin: 0; font-size: 17px; line-height: 1.7; color: #C5CBD3">Once Google confirms who you are, you become exactly the same kind of user as someone who logged in with a password. One path for everything after login, no special cases.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<p style="margin: 0; font-size: 18px; font-weight: 600">No surprise accounts</p>
+<p style="margin: 0; font-size: 17px; line-height: 1.7; color: #C5CBD3">Having a company Google account isn't enough to get in. You have to exist in the system first, so a person still decides who has access.</p>
+</div>
+</section>
+
+<section style="padding: 80px 0 0; display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.02em">Looking back</h2>
+<p style="margin: 0; font-size: 17px; line-height: 1.7; color: #C5CBD3">If I did it again, I'd build SSO and RBAC together. Doing them one after the other worked, but it meant wiring login into a permission system that was already finished.</p>
+</section>
+
+<nav aria-label="Case studies" style="margin: 96px 0 0; border-top: 1px solid #1E242C; padding: 32px 0 64px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px">
+<a href="Main.dc.html" style="color: #C5CBD3">← Back</a>
+<a href="Main.dc.html#work" style="font-weight: 500">More work →</a>
+</nav>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7CC4FF","options":["#7CC4FF","#F5B544","#4ADE80","#C4B5FD"]},"$preview":{"width":1440,"height":2700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#7CC4FF' };
+  }
+}
+</script>
+</body>
+</html>

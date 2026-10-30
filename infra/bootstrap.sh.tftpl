@@ -1,0 +1,184 @@
+#!/bin/bash
+# First-boot setup for the portfolio server (Amazon Linux 2023, ARM).
+# Rendered by Terraform: ${domain} style values are filled in at plan time.
+# Output is logged to /var/log/cloud-init-output.log.
+set -euxo pipefail
+
+# --- OS updates -------------------------------------------------------------
+# AL2023 pins packages to the AMI's release by default; "latest" lets the
+# automatic updater actually see new security fixes.
+echo latest > /etc/dnf/vars/releasever
+dnf -y upgrade
+dnf -y install dnf-automatic tar xz
+
+sed -i 's/^upgrade_type.*/upgrade_type = security/' /etc/dnf/automatic.conf
+systemctl enable --now dnf-automatic-install.timer
+
+# --- Node.js 22 (latest patch, checksum-verified) -----------------------------
+NODE_DIST=https://nodejs.org/dist/latest-v22.x
+cd /tmp
+curl -fsSL "$NODE_DIST/SHASUMS256.txt" -o node-sums.txt
+NODE_TAR=$(awk '/linux-arm64\.tar\.xz$/ {print $2}' node-sums.txt)
+curl -fsSLO "$NODE_DIST/$NODE_TAR"
+grep " $NODE_TAR\$" node-sums.txt | sha256sum -c -
+tar -xJf "$NODE_TAR" -C /usr/local --strip-components=1 --exclude='*.md' --exclude=LICENSE
+rm -f "$NODE_TAR" node-sums.txt
+node --version
+
+# --- Caddy (pinned release, checksum-verified) -------------------------------
+CADDY_TAR=caddy_${caddy_version}_linux_arm64.tar.gz
+CADDY_URL=https://github.com/caddyserver/caddy/releases/download/v${caddy_version}
+curl -fsSLO "$CADDY_URL/$CADDY_TAR"
+curl -fsSLO "$CADDY_URL/caddy_${caddy_version}_checksums.txt"
+sha512sum -c --ignore-missing "caddy_${caddy_version}_checksums.txt"
+tar -xzf "$CADDY_TAR" -C /usr/local/bin caddy
+rm -f "$CADDY_TAR" "caddy_${caddy_version}_checksums.txt"
+caddy version
+
+# --- Users and folders -----------------------------------------------------
+useradd --system --home-dir /var/lib/caddy --create-home --shell /sbin/nologin caddy
+useradd --system --no-create-home --shell /sbin/nologin portfolio
+
+mkdir -p /etc/caddy /etc/portfolio /srv/portfolio/releases/placeholder/site
+cat > /srv/portfolio/releases/placeholder/site/index.html <<'HTML'
+<!doctype html><meta charset="utf-8"><title>Coming soon</title>
+<p style="font-family:system-ui;margin:4rem auto;max-width:30rem">Server is up. The site arrives with the first deploy.</p>
+HTML
+ln -sfn /srv/portfolio/releases/placeholder /srv/portfolio/current
+chmod -R a+rX /srv/portfolio
+
+# Contact API settings (no secrets: AWS credentials come from the instance role)
+cat > /etc/portfolio/contact-api.env <<'ENV'
+PORT=3001
+AWS_REGION=${region}
+CONTACT_FROM=${contact_from}
+CONTACT_TO=${contact_to}
+ENV
+chmod 640 /etc/portfolio/contact-api.env
+chgrp portfolio /etc/portfolio/contact-api.env
+
+# --- Caddy config and service -------------------------------------------------
+cat > /etc/caddy/Caddyfile <<'CADDY'
+{
+	email ${acme_email}
+}
+
+${domain} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		-Server
+	}
+
+	handle /api/contact {
+		reverse_proxy 127.0.0.1:3001
+	}
+
+	handle {
+		root * /srv/portfolio/current/site
+		try_files {path} {path}.html {path}/index.html
+		file_server
+	}
+}
+
+www.${domain} {
+	redir https://${domain}{uri} permanent
+}
+CADDY
+
+cat > /etc/systemd/system/caddy.service <<'UNIT'
+[Unit]
+Description=Caddy web server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+User=caddy
+Group=caddy
+ExecStart=/usr/local/bin/caddy run --environ --config /etc/caddy/Caddyfile
+ExecReload=/usr/local/bin/caddy reload --config /etc/caddy/Caddyfile --force
+TimeoutStopSec=5s
+LimitNOFILE=1048576
+PrivateTmp=true
+ProtectSystem=full
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+# --- Contact API service (started by the first deploy) ------------------------
+cat > /etc/systemd/system/contact-api.service <<'UNIT'
+[Unit]
+Description=Portfolio contact form API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=portfolio
+Group=portfolio
+WorkingDirectory=/srv/portfolio/current/api
+EnvironmentFile=/etc/portfolio/contact-api.env
+ExecStart=/usr/local/bin/node server.js
+Restart=on-failure
+RestartSec=5
+MemoryMax=256M
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+# --- Deploy helper, called by scripts/deploy.sh through SSM -------------------
+cat > /usr/local/bin/portfolio-deploy <<'DEPLOY'
+#!/bin/bash
+# Usage: portfolio-deploy s3://bucket/releases/<name>.tgz
+set -euo pipefail
+SRC="$1"
+ID=$(date -u +%Y%m%d%H%M%S)
+DIR=/srv/portfolio/releases/$ID
+TMP=$(mktemp)
+trap 'rm -f "$TMP"' EXIT
+
+aws s3 cp --only-show-errors --region ${region} "$SRC" "$TMP"
+mkdir -p "$DIR"
+tar -xzf "$TMP" -C "$DIR"
+chown -R root:root "$DIR"
+chmod -R a+rX,go-w "$DIR"
+test -f "$DIR/site/index.html"
+test -f "$DIR/api/server.js"
+
+# Atomic switch: Caddy serves the new files immediately
+ln -sfn "$DIR" /srv/portfolio/current.new
+mv -Tf /srv/portfolio/current.new /srv/portfolio/current
+
+systemctl enable --quiet contact-api
+systemctl restart contact-api
+sleep 2
+if ! systemctl is-active --quiet contact-api; then
+  journalctl -u contact-api -n 30 --no-pager
+  exit 1
+fi
+
+# Keep the three newest releases for quick rollback
+ls -1dt /srv/portfolio/releases/*/ | grep -v placeholder | tail -n +4 | xargs -r rm -rf
+echo "Deployed release $ID"
+DEPLOY
+chmod 755 /usr/local/bin/portfolio-deploy
+
+systemctl daemon-reload
+systemctl enable --now caddy
+echo "Bootstrap finished"

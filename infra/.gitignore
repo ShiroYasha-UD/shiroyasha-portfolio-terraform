@@ -1,0 +1,7 @@
+# Terraform working files and state (state can contain resource details; keep it out of git)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+# Keep .terraform.lock.hcl committed: it pins provider versions.

@@ -1,0 +1,10 @@
+---
+import Base from './Base.astro';
+import Header from '../components/Header.astro';
+const { frontmatter } = Astro.props;
+---
+<Base title={`${frontmatter.title} — David Bali`} description={frontmatter.description} narrow>
+  <Header back />
+  <main id="main" class="case-study"><slot /></main>
+  <nav class="case-nav" aria-label="Case studies"><a href="/">← Back</a><a href="/#work">More work →</a></nav>
+</Base>

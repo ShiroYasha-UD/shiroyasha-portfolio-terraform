@@ -1,0 +1,192 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import StackDiagram from '../components/StackDiagram';
+import Icon from '../components/Icon.astro';
+import miyabi from '../public/miyabi.png';
+
+const projects = [
+  { number: '01', category: 'Identity',
+    title: 'Single sign-on and fine-grained access control',
+    description: 'Built as a junior: SAML login because NIS2 forced us, then a named permission for every endpoint, grouped into roles like Operator, Driver and Admin.', tags: ['Spring Security', 'SAML 2.0', 'RBAC'], link: '/work/sso-and-permissions/' },
+  { number: '02',
+    category: 'Frontend',
+    title: 'Upgrading the whole frontend stack',
+    description: 'React 18 → 19, MUI 5 → 9, React Router 6 → 7, TypeScript 5 → 6, ESLint 8 → 9: about 20 major upgrades in one go, with 10 outdated packages dropped or replaced along the way.', tags: ['React 19', 'MUI 9', 'TypeScript 6', 'Webpack'] },
+  { number: '03',
+    category: 'DevOps',
+    title: 'Keeping the platform running',
+    description: 'Aside from programming, I help run the test and production environments: EC2 infrastructure in Terraform, containerized services on Docker and Kubernetes, deployments through Jenkins, daily maintenance and data fixes, and looking for bugs in Graylog and Grafana. Plus a Jira Service Management portal for company-wide internal requests.', tags: ['Terraform', 'AWS EC2', 'Docker · Kubernetes', 'Jenkins', 'Graylog · Grafana'] },
+];
+
+const lab = [
+  { title: 'windows-gaming-vm-linux', description: 'A Windows 11 VM on Linux with my own patched KVM module. Tuning the host cut worst-case vCPU preemption 3.3×.', stack: 'C · Bash · KVM · QEMU' },
+  { title: 'wlcrosshair-gui', description: 'wlcrosshair had no GUI, so I made one: config editor, crosshair generator, live controls.', stack: 'Rust · Tauri · React' },
+  { title: 'apartment-telegram-monitor', description: 'Good Budapest flats disappear in hours, so a bot watches the listings and pings me on Telegram.', stack: 'Python · Playwright' },
+];
+
+// Add your contact details here when they are ready to publish.
+const contact = { email: '' };
+const displayedEmail = contact.email || 'balidavid@shiroyasha.dev';
+const skills = ['Java', 'Spring Boot', 'JPA / Hibernate', 'React', 'TypeScript', 'AWS', 'Aurora · Redshift', 'SAML / SSO', 'Docker · Kubernetes', 'Terraform', 'Jenkins', 'Grafana · Graylog', 'Linux'];
+
+// Muted, readable versions of GitHub language colors and technology brand colors.
+const techColors: Record<string, string> = {
+  'Java': '#e99570', 'Spring Boot': '#95c979', 'Spring Security': '#95c979',
+  'JPA': '#b9a4cf', 'Hibernate': '#c8bd87', 'React': '#82cddd', 'React 19': '#82cddd',
+  'TypeScript': '#80addd', 'TypeScript 6': '#80addd', 'AWS': '#e7b475', 'AWS EC2': '#e7b475',
+  'Aurora': '#c3a6dd', 'Redshift': '#c3a6dd', 'SAML': '#a8b6d9', 'SSO': '#a8b6d9',
+  'SAML 2.0': '#a8b6d9', 'RBAC': '#a8b6d9', 'Docker': '#79bde9', 'Kubernetes': '#89a9e6',
+  'Terraform': '#b3a1ea', 'Jenkins': '#d6a496', 'Grafana': '#eca96b', 'Graylog': '#e8a47f',
+  'Linux': '#ddcb88', 'MUI 9': '#87b5e8', 'Webpack': '#8fc4dc', 'C': '#a8adb6',
+  'Bash': '#9cce90', 'KVM': '#9db8c9', 'QEMU': '#a8b9c5', 'Rust': '#d7a68e',
+  'Tauri': '#e4c681', 'Python': '#8db5d8', 'Playwright': '#91c99e',
+};
+
+const techParts = (label: string) => label.split(/( · | \/ )/).map(part => ({ text: part, color: techColors[part] }));
+const techColor = (label: string) => techParts(label).find(part => part.color)?.color ?? '#a8b6c9';
+
+---
+<Base title="Shiroyasha — Full-stack & DevOps" ogTitle="ShiroYasha's Portfolio" description="David Bali is a backend-leaning full-stack developer in Budapest, building with Spring Boot, React, AWS and Linux.">
+  <Header />
+  <main id="main">
+    <section class="hero" id="top">
+      <p class="availability"><span class="status-dot"></span>full-stack &amp; DevOps · Budapest · Remote/On-site</p>
+      <h1>I like working on every layer, even as a hobby</h1>
+      <p class="hero-copy">At work: Spring Boot, React/TypeScript, AWS and DevOps side that keeps the app running. After hours: Linux internals, KVM and Wayland tooling, playing with AWS. I just like to build systems, found it interesting, gives you full control.</p>
+      <div class="actions"><a class="button" href="#work">See what I've shipped <Icon name="arrow" /></a>
+        <!--<a class="button button-outline" href="https://github.com/IShiroxYashaI" target="_blank" rel="noopener noreferrer"><Icon name="github" /> GitHub</a>-->
+      </div>
+    </section>
+    <StackDiagram client:load />
+    <section class="section" id="work" aria-labelledby="work-title">
+      <div class="section-heading"><h2 id="work-title">Things I've shipped</h2><p>Work projects, anonymized where they need to be.</p></div>
+      <div class="project-grid">{projects.map((project) => <article class="project-card panel"><p class="eyebrow muted">{project.number} · {project.category}</p><h3>{project.title}</h3><p class="project-description">{project.description}</p><div class="tags">{project.tags.map(tag => <span class="tech-tag" style={`--tech-color: ${techColor(tag)}`}>{techParts(tag).map(part => <span class="tech-part" style={part.color ? `color: ${part.color}` : undefined}>{part.text}</span>)}</span>)}</div>{project.link && <a class="story-link" href={project.link}>Read the story →</a>}</article>)}</div>
+    </section>
+    <section class="section" id="lab" aria-labelledby="lab-title">
+      <div class="section-heading"><h2 id="lab-title">After hours</h2><p>Things I built</p></div>
+      <div class="lab-list">{lab.map(item => <a class="lab-item" href={`https://github.com/IShiroxYashaI/${item.title}`} target="_blank" rel="noopener noreferrer"><span class="lab-copy"><strong>{item.title}</strong><span>{item.description}</span></span><span class="lab-stack">{techParts(item.stack).map(part => <span class="tech-part" style={part.color ? `color: ${part.color}` : undefined}>{part.text}</span>)} <span class="lab-arrow" aria-hidden="true">↗</span></span></a>)}</div>
+    </section>
+    <section class="section about" id="about" aria-labelledby="about-title">
+      <div class="about-mark" aria-hidden="true"><img src={miyabi.src} alt="" width={miyabi.width} height={miyabi.height} loading="lazy" decoding="async" /></div>
+      <div class="about-copy"><h2 id="about-title">About</h2><p>I'm David Bali, ShiroYasha online. I'm a backend-leaning full-stack developer in Budapest, on a team of four, working across Spring Boot services, React/TypeScript frontends and AWS. I like building a feature from the schema to the screen.</p><p>After hours I like to tune Linux: KVM and GPU passthrough, Wayland tooling, homelab in progress with OPNsense and PI-hole. Security is next on the list.</p><div class="skills">{skills.map(skill => <span class="tech-tag" style={`--tech-color: ${techColor(skill)}`}>{techParts(skill).map(part => <span class="tech-part" style={part.color ? `color: ${part.color}` : undefined}>{part.text}</span>)}</span>)}</div></div>
+    </section>
+    <section class="contact" id="contact">
+      <h2>Say hi.</h2>
+      <!--<p>Open to full-stack, backend and DevOps-leaning roles where I can grow toward system design, in Budapest or remote. Also happy to just talk Linux.</p>-->
+      <p>Whether it’s a role, a project or just a question, feel free to contact me:</p>
+      <div class="contact-direct">
+      <div class="contact-actions">
+        <div class="email-copy">
+          <span class="email-address">{contact.email || `[${displayedEmail}]`}</span>
+          <button type="button" class="copy-button" data-email={displayedEmail}><span class="copy-icon"><Icon name="copy" /></span><span class="check-icon"><Icon name="check" /></span><span class="copy-label" aria-live="polite">Copy</span></button>
+        </div>
+        <a class="button button-outline contact-link" href="https://github.com/ShiroYasha-UD" target="_blank" rel="noopener noreferrer"><Icon name="github" /> GitHub</a>
+        <a class="button button-outline contact-link" href="https://www.linkedin.com/in/bali-d%C3%A1vid/" target="_blank" rel="noopener noreferrer"><Icon name="linkedin" /> LinkedIn</a>
+        <a class="button button-outline contact-link" href="https://discord.com/users/447134169122734090" target="_blank" rel="noopener noreferrer"><Icon name="discord" /> Discord</a>
+        <a class="button button-outline contact-link" href="https://t.me/shiroyasha_ud" target="_blank" rel="noopener noreferrer"><Icon name="telegram" /> Telegram </a>
+      </div>
+      </div>
+      <span class="copy-status" aria-live="polite"></span>
+      <div class="contact-form-area">
+      <form class="contact-form panel" action="/api/contact" method="post" aria-labelledby="message-title">
+        <h3 id="message-title">Or send a message from here</h3>
+        <div class="contact-fields">
+          <div class="contact-field">
+            <label for="contact-name">Name</label>
+            <input id="contact-name" name="name" autocomplete="name" maxlength="100" required />
+          </div>
+          <div class="contact-field">
+            <label for="contact-email">Email</label>
+            <input id="contact-email" name="email" type="email" autocomplete="email" maxlength="200" required />
+          </div>
+        </div>
+        <label for="contact-message">Message</label>
+        <textarea id="contact-message" name="message" rows="5" maxlength="5000" required></textarea>
+        <div class="contact-honeypot" aria-hidden="true"><label for="contact-website">Website</label><input id="contact-website" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
+        <button class="button" type="submit" disabled><Icon name="send" /> <span class="send-label">Send message</span></button>
+        <p class="contact-form-status" role="status" aria-live="polite"></p>
+        <noscript><p class="form-note">Please enable JavaScript to send a message.</p></noscript>
+        <p class="form-note">My emails are encrypted using Tuta services</p>
+      </form>
+      <span class="arch-sticker" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><path d="M12 1c-.94 2.3-1.51 3.8-2.56 6.04.64.68 1.43 1.47 2.72 2.36-1.39-.57-2.34-1.15-3.05-1.75C7.77 10.45 5.67 14.6 2 21.5c2.88-1.67 5.11-2.7 7.2-3.1a8.2 8.2 0 0 1-.1-1.28c0-2.19 1.18-3.87 2.98-3.87s2.98 1.68 2.98 3.87c0 .45-.03.88-.1 1.28 2.09.4 4.32 1.43 7.2 3.1-3.68-6.9-5.77-11.05-7.12-13.85-.71.6-1.66 1.18-3.05 1.75 1.29-.89 2.08-1.68 2.72-2.36C13.66 4.8 12.94 3.3 12 1Z" /></svg><span>i use Arch btw</span></span>
+      </div>
+    </section>
+  </main>
+  <footer><span>© {new Date().getFullYear()} David Bali · shiroyasha</span><a href="#top">Back to top ↑</a></footer>
+</Base>
+
+<script>
+  const copyButton = document.querySelector<HTMLButtonElement>('.copy-button');
+  const copyStatus = document.querySelector<HTMLElement>('.copy-status');
+  const copyLabel = copyButton?.querySelector<HTMLElement>('.copy-label');
+  let copyResetTimer: number | undefined;
+  copyButton?.addEventListener('click', async () => {
+    const email = copyButton.dataset.email;
+    if (!email || !copyStatus || !copyLabel) return;
+    try {
+      await navigator.clipboard.writeText(email);
+      copyLabel.textContent = 'Copied';
+      copyStatus.textContent = '';
+      copyButton.classList.add('copied');
+      window.clearTimeout(copyResetTimer);
+      copyResetTimer = window.setTimeout(() => {
+        copyLabel.textContent = 'Copy';
+        copyButton.classList.remove('copied');
+      }, 3000);
+    } catch {
+      copyStatus.textContent = 'Could not copy. Please select the email address and copy it manually.';
+    }
+  });
+
+  const contactForm = document.querySelector<HTMLFormElement>('.contact-form');
+  const sendButton = contactForm?.querySelector<HTMLButtonElement>('button[type="submit"]');
+  const sendLabel = contactForm?.querySelector<HTMLElement>('.send-label');
+  const formStatus = contactForm?.querySelector<HTMLElement>('.contact-form-status');
+  if (contactForm && sendButton && sendLabel && formStatus) {
+    sendButton.disabled = false;
+    contactForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!contactForm.reportValidity() || sendButton.disabled) return;
+      const fields = new FormData(contactForm);
+      const payload = {
+        name: String(fields.get('name') ?? '').trim(),
+        email: String(fields.get('email') ?? '').trim(),
+        message: String(fields.get('message') ?? '').trim(),
+        website: String(fields.get('website') ?? ''),
+      };
+      sendButton.disabled = true;
+      sendLabel.textContent = 'Sending…';
+      formStatus.textContent = '';
+      formStatus.classList.remove('is-error');
+      try {
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (response.status !== 204) {
+          const data = await response.json().catch(() => null);
+          throw new Error(typeof data?.error === 'string' ? data.error : 'Could not send the message right now. Please try again.');
+        }
+        contactForm.reset();
+        sendLabel.textContent = 'Sent ✓';
+        formStatus.textContent = 'Your message was sent.';
+      } catch (error) {
+        sendLabel.textContent = 'Send message';
+        formStatus.classList.add('is-error');
+        formStatus.textContent = error instanceof TypeError
+          ? 'Could not reach the contact service. Please try again.'
+          : error instanceof Error ? error.message : 'Could not send the message right now. Please try again.';
+      } finally {
+        sendButton.disabled = false;
+      }
+    });
+    contactForm.addEventListener('input', () => {
+      if (sendLabel.textContent === 'Sent ✓') {
+        sendLabel.textContent = 'Send message';
+        formStatus.textContent = '';
+      }
+    });
+  }
+</script>
